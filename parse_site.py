@@ -3,7 +3,27 @@ import bs4
 import tabulate
 import statistics
 import pytemperature
-import lxml
+import os
+import datetime
+
+exit_code = 0
+"""
+    0 Success
+    1 General Error
+    20 General Connection Error
+    21 Connection Error on goc
+    22 Connection Error on weather
+    23 Connection Error on itugnu
+    23 Connection Error on beyazperde
+"""
+
+
+def set_exit_code(number):
+    global exit_code
+    if 20 <= exit_code < 30 and 20 <= number < 30:
+        number = 20
+
+    exit_code = number
 
 
 def get_header_and_data(soup):
@@ -76,8 +96,16 @@ def get_formatted_rows(row_data):
 
 def get_goc_data():
     base_url = "http://itu17-a3-asocia.herokuapp.com/"
+    try:
+        anasayfa_response = requests.get(base_url)
+    except requests.ConnectionError as e:
+        set_exit_code(21)
+        if not os.getenv("FAIL_SILENTLY", ""):
+            print(base_url, "|", e)
+            raise
+        else:
+            return
 
-    anasayfa_response = requests.get(base_url)
     anasayfa_soup = bs4.BeautifulSoup(anasayfa_response.text, "lxml")
 
     basliklar, ham_satirlar = get_header_and_data(anasayfa_soup)
@@ -96,8 +124,16 @@ def get_goc_data():
 
 def get_weather_data():
     base_url = "https://www.yahoo.com/news/weather"
+    try:
+        hava_response = requests.get(base_url)
+    except requests.ConnectionError as e:
+        set_exit_code(22)
+        if not os.getenv("FAIL_SILENTLY", ""):
+            print(base_url, "|", e)
+            raise
+        else:
+            return
 
-    hava_response = requests.get(base_url)
     hava_soup = bs4.BeautifulSoup(hava_response.text, "lxml")
 
     now_soup = hava_soup.find(class_="temperature").find(class_="now")
@@ -120,7 +156,18 @@ def get_weather_data():
 
 
 def get_itugnu_data():
-    itugnu_response = requests.get("https://itugnu.org/tr/lectures/")
+    base_url = "https://itugnu.org/tr/lectures/"
+
+    try:
+        itugnu_response = requests.get(base_url)
+    except requests.ConnectionError as e:
+        set_exit_code(23)
+        if not os.getenv("FAIL_SILENTLY", ""):
+            print(base_url, "|", e)
+            raise
+        else:
+            return
+
     itugnu_soup = bs4.BeautifulSoup(itugnu_response.text, "lxml")
     for container in itugnu_soup.find_all(class_="portfolio-caption"):
         h4 = container.find("h4")
@@ -133,8 +180,66 @@ def get_itugnu_data():
         print(h4.text.strip(), "|", durum)
 
 
+class Film:
+    def __init__(self, isim, skor):
+        self.isim = isim
+        self.skor = skor
+
+    def __lt__(self, other):
+        if self.skor == other.skor:
+            return True if self.isim < other.isim else False
+        else:
+            return True if self.skor > other.skor else False
+
+    def __str__(self):
+        return "{} | {}".format(self.isim, self.skor)
+
+def get_beyazperde_data():
+    bugun = datetime.date.today()
+    bu_hafta_pazartesi = bugun - datetime.timedelta(days=bugun.weekday())
+
+    if bugun.weekday() > 4:
+        bu_hafta_pazartesi = bugun + datetime.timedelta(days=7)
+
+    bu_hafta_cuma = bu_hafta_pazartesi + datetime.timedelta(days=4)
+    onceki_bes_cuma = [bu_hafta_cuma - datetime.timedelta(days=7*i) for i in range(1, 6)]
+    for sira, gun in enumerate([bu_hafta_cuma] + onceki_bes_cuma):
+        base_url = "http://www.beyazperde.com/filmler/takvim/?week={}".format(gun.isoformat())
+
+        try:
+            beyazperde_response = requests.get(base_url)
+        except requests.ConnectionError as e:
+            set_exit_code(24)
+            if not os.getenv("FAIL_SILENTLY", ""):
+                print(base_url, "|", e)
+                raise
+            else:
+                return
+
+        beyazperde_soup = bs4.BeautifulSoup(beyazperde_response.text, "lxml")
+
+        data_box = beyazperde_soup.find_all(class_="data_box")
+        if sira == 0:
+            print("###Bu Haftanın Filmleri")
+        else:
+            print("###Haftanın Filmleri ({})".format(gun.isoformat()))
+        filmler = []
+        for datum in data_box:
+            if datum.find(class_="note") is not None:
+                skor = float(datum.find(class_="note").text.replace(",", "."))
+            else:
+                skor = 0.0
+
+            filmler.append(Film(datum.find("h2").text.strip(), skor))
+        print(*[str(film) for film in sorted(filmler)], sep="\n")
+        print("-"*39)
+
 get_goc_data()
-print("-"*79)
+print("-" * 79)
 get_weather_data()
-print("-"*79)
+print("-" * 79)
 get_itugnu_data()
+print("-" * 79)
+get_beyazperde_data()
+
+exit(exit_code)
