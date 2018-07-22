@@ -247,7 +247,7 @@ class Film:
         return "{} | {}".format(self.isim, self.skor)
 
 
-def get_beyazperde_data(pp=False):
+def get_beyazperde_data(sayi=5, pp=False):
     bugun = datetime.date.today()
     bu_hafta_pazartesi = bugun - datetime.timedelta(days=bugun.weekday())
 
@@ -255,7 +255,7 @@ def get_beyazperde_data(pp=False):
         bu_hafta_pazartesi = bugun + datetime.timedelta(days=7)
 
     bu_hafta_cuma = bu_hafta_pazartesi + datetime.timedelta(days=4)
-    onceki_bes_cuma = [bu_hafta_cuma - datetime.timedelta(days=7 * i) for i in range(1, 6)]
+    onceki_bes_cuma = [bu_hafta_cuma - datetime.timedelta(days=7 * i) for i in range(1, 1+sayi)]
     haftalik_filmler = []
     for sira, gun in enumerate([bu_hafta_cuma] + onceki_bes_cuma):
         base_url = "http://www.beyazperde.com/filmler/takvim/?week={}".format(gun.isoformat())
