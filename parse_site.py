@@ -95,7 +95,7 @@ def get_formatted_rows(row_data):
     return formatli_satirlar
 
 
-def get_goc_data():
+def get_goc_data(pp=False):
     base_url = "http://itu17-a3-asocia.herokuapp.com/"
     try:
         anasayfa_response = requests.get(base_url)
@@ -116,12 +116,13 @@ def get_goc_data():
     for row in reversed(ortalama_satirlar):
         cast_satirlar.insert(0, row)
 
-    formatli_satirlar = get_formatted_rows(cast_satirlar)
-
-    guzel_tablo = tabulate.tabulate(formatli_satirlar, headers=basliklar, tablefmt="fancy_grid")
-    print(anasayfa_soup.find(class_="title").text)
-    print(guzel_tablo)
-
+    if pp:
+        formatli_satirlar = get_formatted_rows(cast_satirlar)
+        guzel_tablo = tabulate.tabulate(formatli_satirlar, headers=basliklar, tablefmt="fancy_grid")
+        print(anasayfa_soup.find(class_="title").text)
+        print(guzel_tablo)
+    else:
+        return [{baslik:deger for baslik, deger in zip(basliklar, satir)} for satir in cast_satirlar]
 
 def get_weather_response():
     base_url = "https://www.yahoo.com/news/weather"
@@ -137,7 +138,7 @@ def get_weather_response():
     return hava_response
 
 
-def get_weather_data_xpath(hava_response):
+def get_weather_data_xpath(hava_response, pp=False):
     element_tree = lxml.html.fromstring(hava_response.text)
     root_element_xpath = "/html/body/div[1]/div/div[1]/div/div[4]/div[1]" \
                          "/div/div[2]/div/div/div/div/section[2]/div/div[3]"
@@ -165,14 +166,17 @@ def get_weather_data_xpath(hava_response):
     else:
         raise ValueError("Yahoo'nun gösterdiği sıcaklık ölçeği celcius ya da fahreneit değil")
 
-    import sys
-    if sys.version_info[:2] >= (3, 6):
-        print(f"{celcius_derece:d}C°")
+    if pp:
+        import sys
+        if sys.version_info[:2] >= (3, 6):
+            print(f"{celcius_derece:d}C°")
+        else:
+            print("{:d} C°".format(celcius_derece))
     else:
-        print("{:d} C°".format(celcius_derece))
+        return {"degree":celcius_derece, "scale":"C"}
 
 
-def get_weather_data(hava_response):
+def get_weather_data(hava_response, pp=False):
     hava_soup = bs4.BeautifulSoup(hava_response.text, "html.parser")
 
     now_soup = hava_soup.find(class_="temperature").find(class_="now")
@@ -187,14 +191,16 @@ def get_weather_data(hava_response):
     else:
         raise ValueError("Yahoo'nun gösterdiği sıcaklık ölçeği celcius ya da fahreneit değil")
 
-    import sys
-    if sys.version_info[:2] >= (3, 6):
-        print(f"{celcius_derece:d}C°")
+    if pp:
+        import sys
+        if sys.version_info[:2] >= (3, 6):
+            print(f"{celcius_derece:d}C°")
+        else:
+            print("{:d} C°".format(celcius_derece))
     else:
-        print("{:d} C°".format(celcius_derece))
+        return {"degree":derece, "scale":"C"}
 
-
-def get_itugnu_data():
+def get_itugnu_data(pp=False):
     base_url = "https://itugnu.org/tr/lectures/"
 
     try:
@@ -208,15 +214,22 @@ def get_itugnu_data():
             return
 
     itugnu_soup = bs4.BeautifulSoup(itugnu_response.text, "lxml")
+    etkinlikler = {}
     for container in itugnu_soup.find_all(class_="portfolio-caption"):
         h4 = container.find("h4")
 
         if "fa-star" in h4.find("i").attrs["class"]:
-            durum = "Açık"
+            durum = True
         else:
-            durum = "Kapalı"
+            durum = False
 
-        print(h4.text.strip(), "|", durum)
+        etkinlikler[h4.text.strip()] = durum
+
+    if pp:
+        for etk, aciklik in etkinlikler.items():
+            print(etk, "|", "Açık" if aciklik else "Kapalı")
+    else:
+        return etkinlikler
 
 
 class Film:
@@ -234,7 +247,7 @@ class Film:
         return "{} | {}".format(self.isim, self.skor)
 
 
-def get_beyazperde_data():
+def get_beyazperde_data(pp=False):
     bugun = datetime.date.today()
     bu_hafta_pazartesi = bugun - datetime.timedelta(days=bugun.weekday())
 
@@ -243,6 +256,7 @@ def get_beyazperde_data():
 
     bu_hafta_cuma = bu_hafta_pazartesi + datetime.timedelta(days=4)
     onceki_bes_cuma = [bu_hafta_cuma - datetime.timedelta(days=7 * i) for i in range(1, 6)]
+    haftalik_filmler = []
     for sira, gun in enumerate([bu_hafta_cuma] + onceki_bes_cuma):
         base_url = "http://www.beyazperde.com/filmler/takvim/?week={}".format(gun.isoformat())
 
@@ -259,10 +273,6 @@ def get_beyazperde_data():
         beyazperde_soup = bs4.BeautifulSoup(beyazperde_response.text, "lxml")
 
         data_box = beyazperde_soup.find_all(class_="data_box")
-        if sira == 0:
-            print("###Bu Haftanın Filmleri")
-        else:
-            print("###Haftanın Filmleri ({})".format(gun.isoformat()))
         filmler = []
         for datum in data_box:
             if datum.find(class_="note") is not None:
@@ -271,16 +281,39 @@ def get_beyazperde_data():
                 skor = 0.0
 
             filmler.append(Film(datum.find("h2").text.strip(), skor))
-        print(*[str(film) for film in sorted(filmler)], sep="\n")
-        print("-" * 39)
 
+        haftalik_filmler.append(({"hafta":gun, "filmler":list(sorted(filmler))}))
+
+    if pp:
+        for sira, veri in enumerate(haftalik_filmler):
+            if sira == 0:
+                print("###Bu Haftanın Filmleri")
+            else:
+                print("###Haftanın Filmleri ({})".format(veri["hafta"].isoformat()))
+            print(*[str(film) for film in veri["filmler"]], sep="\n")
+            print("-" * 39)
+    else:
+        return [
+            {
+                "hafta":veri["hafta"].isoformat(),
+                "filmler":[
+                    {
+                        "isim":film.isim,
+                        "skor":film.skor
+                    }
+                    for film in veri["filmler"]
+                ]
+            }
+            for veri in haftalik_filmler
+        ]
 
 def compare_xpath_bs4():
-    setup_stmt = """
+    import textwrap
+    setup_stmt = textwrap.dedent("""
         from __main__ import get_weather_data_xpath, get_weather_data, get_weather_response
-
+    
         response = get_weather_response()
-        """
+        """)
     import sys
     import os
 
@@ -298,15 +331,15 @@ def compare_xpath_bs4():
 
 
 if __name__ == '__main__':
-    get_goc_data()
+    get_goc_data(pp=True)
     print("-" * 79)
-    get_weather_data(get_weather_response())
+    get_weather_data(get_weather_response(), pp=True)
     print("-" * 79)
-    get_weather_data_xpath(get_weather_response())
+    get_weather_data_xpath(get_weather_response(), pp=True)
     print("-" * 79)
-    get_itugnu_data()
+    get_itugnu_data(pp=True)
     print("-" * 79)
-    get_beyazperde_data()
+    get_beyazperde_data(pp=True)
     print("-" * 79)
     compare_xpath_bs4()
     print("-" * 79)
