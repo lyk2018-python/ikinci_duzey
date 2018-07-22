@@ -5,6 +5,7 @@ import statistics
 import pytemperature
 import os
 import datetime
+import lxml.html
 
 exit_code = 0
 """
@@ -122,7 +123,7 @@ def get_goc_data():
     print(guzel_tablo)
 
 
-def get_weather_data():
+def get_weather_response():
     base_url = "https://www.yahoo.com/news/weather"
     try:
         hava_response = requests.get(base_url)
@@ -133,8 +134,46 @@ def get_weather_data():
             raise
         else:
             return
+    return hava_response
 
-    hava_soup = bs4.BeautifulSoup(hava_response.text, "lxml")
+
+def get_weather_data_xpath(hava_response):
+    element_tree = lxml.html.fromstring(hava_response.text)
+    root_element_xpath = "/html/body/div[1]/div/div[1]/div/div[4]/div[1]" \
+                         "/div/div[2]/div/div/div/div/section[2]/div/div[3]"
+
+    temp_elements = element_tree.xpath(root_element_xpath + "/span[1]")
+    deg_elements = element_tree.xpath(root_element_xpath + "/div/button[1]")
+
+    if temp_elements:
+        temp_element = temp_elements[0]
+    else:
+        raise ValueError("Sıcaklık elementini bulamadık")
+
+    if deg_elements:
+        deg_element = deg_elements[0]
+    else:
+        raise ValueError("Ölçek elementini bulamadık")
+
+    derece = temp_element.text
+    olcek = deg_element.text
+
+    if olcek.lower() == "f":
+        celcius_derece = int(pytemperature.f2c(int(derece)))
+    elif olcek.lower() == "c":
+        celcius_derece = int(derece)
+    else:
+        raise ValueError("Yahoo'nun gösterdiği sıcaklık ölçeği celcius ya da fahreneit değil")
+
+    import sys
+    if sys.version_info[:2] >= (3, 6):
+        print(f"{celcius_derece:d}C°")
+    else:
+        print("{:d} C°".format(celcius_derece))
+
+
+def get_weather_data(hava_response):
+    hava_soup = bs4.BeautifulSoup(hava_response.text, "html.parser")
 
     now_soup = hava_soup.find(class_="temperature").find(class_="now")
 
@@ -194,6 +233,7 @@ class Film:
     def __str__(self):
         return "{} | {}".format(self.isim, self.skor)
 
+
 def get_beyazperde_data():
     bugun = datetime.date.today()
     bu_hafta_pazartesi = bugun - datetime.timedelta(days=bugun.weekday())
@@ -202,7 +242,7 @@ def get_beyazperde_data():
         bu_hafta_pazartesi = bugun + datetime.timedelta(days=7)
 
     bu_hafta_cuma = bu_hafta_pazartesi + datetime.timedelta(days=4)
-    onceki_bes_cuma = [bu_hafta_cuma - datetime.timedelta(days=7*i) for i in range(1, 6)]
+    onceki_bes_cuma = [bu_hafta_cuma - datetime.timedelta(days=7 * i) for i in range(1, 6)]
     for sira, gun in enumerate([bu_hafta_cuma] + onceki_bes_cuma):
         base_url = "http://www.beyazperde.com/filmler/takvim/?week={}".format(gun.isoformat())
 
@@ -232,14 +272,43 @@ def get_beyazperde_data():
 
             filmler.append(Film(datum.find("h2").text.strip(), skor))
         print(*[str(film) for film in sorted(filmler)], sep="\n")
-        print("-"*39)
+        print("-" * 39)
 
-get_goc_data()
-print("-" * 79)
-get_weather_data()
-print("-" * 79)
-get_itugnu_data()
-print("-" * 79)
-get_beyazperde_data()
 
-exit(exit_code)
+def compare_xpath_bs4():
+    setup_stmt = """
+        from __main__ import get_weather_data_xpath, get_weather_data, get_weather_response
+
+        response = get_weather_response()
+        """
+    import sys
+    import os
+
+    old_stdout = sys.stdout
+    sys.stdout = open(os.devnull, 'w')
+    iteration = 1000
+    import timeit
+
+    x1 = timeit.timeit(stmt="get_weather_data_xpath(response)", setup=setup_stmt, number=iteration)
+    x2 = timeit.timeit(stmt="get_weather_data(response)", setup=setup_stmt, number=iteration)
+
+    sys.stdout = old_stdout
+    print("{} loops, average: {:.3f} sec per loop".format(iteration, x1 / iteration))
+    print("{} loops, average: {:.3f} sec per loop".format(iteration, x2 / iteration))
+
+
+if __name__ == '__main__':
+    get_goc_data()
+    print("-" * 79)
+    get_weather_data(get_weather_response())
+    print("-" * 79)
+    get_weather_data_xpath(get_weather_response())
+    print("-" * 79)
+    get_itugnu_data()
+    print("-" * 79)
+    get_beyazperde_data()
+    print("-" * 79)
+    compare_xpath_bs4()
+    print("-" * 79)
+
+    exit(exit_code)
