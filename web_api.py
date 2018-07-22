@@ -8,10 +8,10 @@ app = flask.Flask(__name__)
 @app.route("/")
 def index():
     return flask.jsonify({
-        "goc":"/goc",
-        "hava":"/hava",
-        "itugnu":"/itugnu",
-        "beyazperde":"/beyazperde",
+        "goc": flask.request.url_root + "goc",
+        "hava": flask.request.url_root + "hava",
+        "itugnu": flask.request.url_root + "itugnu",
+        "beyazperde": flask.request.url_root + "beyazperde",
     })
 
 
