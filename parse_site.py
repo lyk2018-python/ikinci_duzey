@@ -229,7 +229,7 @@ def get_itugnu_data(pp=False):
         for etk, aciklik in etkinlikler.items():
             print(etk, "|", "Açık" if aciklik else "Kapalı")
     else:
-        return etkinlikler
+        return [{"etkinlik":etkinlik, "durum":durum} for etkinlik, durum in etkinlikler.items()]
 
 
 class Film:

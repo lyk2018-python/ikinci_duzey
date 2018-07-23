@@ -7,6 +7,40 @@ blueprint = flask.Blueprint("test_api", __name__)
 
 @blueprint.route("/token")
 def token_deneme():
+    """
+    An Endpoint to try post and get methods
+    ---
+    definitions:
+      - schema:
+          id: Header
+          type: string
+      - schema:
+          id: Token
+          type: object
+          properties:
+            "tür":
+              type: string
+              description: Type of the Token
+            "değer":
+              type: string
+              description: Token Value
+    responses:
+      401:
+        description: Requests Basic Auth
+      200:
+        description: Returns authentication info
+        schema:
+          type: object
+          properties:
+            header:
+              $ref: '#/definitions/Header'
+            token:
+              $ref: '#/definitions/Token'
+    security:
+      - basicAuth: []
+      - apiAuth: []
+
+    """
     header = flask.request.headers.get("AUTHORIZATION")
     if header is not None and len(header.split(" ")) == 2:
         tur, deger = header.split(" ")
@@ -20,14 +54,39 @@ def token_deneme():
     return response
 
 
-@blueprint.route("/get_post", methods=["GET", "POST"])
-def get_post_deneme():
-    if flask.request.method == "GET":
-        return "GET"
-    elif flask.request.method == "POST":
-        return "POST " + str(dict(flask.request.form))
-    else:
-        return ""
+@blueprint.route("/get_ve_post", methods=["GET"])
+def get_deneme():
+    """
+    An Endpoint to try POST and GET methods, this doc is for GET
+    ---
+    definitions:
+      - schema:
+          id: Debug Response
+          type: string
+    responses:
+      200:
+        description: Returns "GET"
+        schema:
+          $ref: '#/definitions/Debug Response'
+    """
+    return "GET"
+
+@blueprint.route("/get_ve_post", methods=["POST"])
+def post_deneme():
+    """
+    An Endpoint to try POST and GET methods, this doc is for POST
+    ---
+    definitions:
+      - schema:
+          id: Debug Response
+          type: string
+    responses:
+      200:
+        description: Returns "POST"  and a debug string
+        schema:
+          $ref: '#/definitions/Debug Response'
+    """
+    return "POST " + str(dict(flask.request.form))
 
 
 eski_hash = "-"
