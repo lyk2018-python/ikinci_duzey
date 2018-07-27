@@ -7,3 +7,5 @@ flask
 flask-swagger
 flask-swagger-ui
 celery
+ipython
+flower
