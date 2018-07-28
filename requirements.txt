@@ -9,3 +9,4 @@ flask-swagger-ui
 celery
 ipython
 flower
+pyside2
