@@ -13,6 +13,7 @@ class CustomWindow(Ui_MainWindow):
         self.hafiza = None
 
     def center(self, MainWindow):
+        """credits to https://gist.github.com/saleph/163d73e0933044d0e2c4"""
         qr = MainWindow.frameGeometry()
         cp = QtWidgets.QDesktopWidget().availableGeometry().center()
         qr.moveCenter(cp)
