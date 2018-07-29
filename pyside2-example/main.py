@@ -12,8 +12,16 @@ class CustomWindow(Ui_MainWindow):
         self.islem = []
         self.hafiza = None
 
+    def center(self, MainWindow):
+        qr = MainWindow.frameGeometry()
+        cp = QtWidgets.QDesktopWidget().availableGeometry().center()
+        qr.moveCenter(cp)
+        MainWindow.move(qr.topLeft())
+
     def setupUi(self, MainWindow):
         super().setupUi(MainWindow)
+        self.center(MainWindow)
+
         self.cikti.setStyleSheet(cikti_default_css)
         self.bol.setStyleSheet("#bol{ background-color: cyan; }")
         self.carp.setStyleSheet("#carp{ background-color: cyan; }")
@@ -37,6 +45,7 @@ class CustomWindow(Ui_MainWindow):
         QtCore.QObject.connect(self.kaydet, QtCore.SIGNAL("clicked()"), self.kaydet_methodu)
         QtCore.QObject.connect(self.gerigetir, QtCore.SIGNAL("clicked()"), self.gerigetir_methodu)
         QtCore.QObject.connect(self.unut, QtCore.SIGNAL("clicked()"), self.unut_methodu)
+
         degerler = {
             self.sifir: "0",
             self.bir: "1",
@@ -60,17 +69,18 @@ class CustomWindow(Ui_MainWindow):
             self.pkapa: ")",
         }
         for key, value in degerler.items():
-            QtCore.QObject.connect(key, QtCore.SIGNAL("clicked()"), self.ekle(value))
+            QtCore.QObject.connect(key, QtCore.SIGNAL("clicked()"), self.ekle_methodu_fabrikasi(value))
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
+        self.unut_methodu()
 
-    def ekle(self, n):
-        def _ekleme():
+    def ekle_methodu_fabrikasi(self, n):
+        def _ekle_methodu():
             for i in n:
                 self.islem.append(i)
             self.cikti.setText(self.get_gosterim())
             self.cikti.setStyleSheet(cikti_default_css)
 
-        return _ekleme
+        return _ekle_methodu
 
     def get_gosterim(self):
         yeni_gosterim = []
@@ -114,8 +124,8 @@ class CustomWindow(Ui_MainWindow):
             return
         else:
             self.cikti.setStyleSheet(cikti_default_css)
-        if (int(float(sonuc)) == float(sonuc)):
-            sonuc = str(int(float(sonuc)))
+        if self.kontrol_girdi(sonuc) == int:
+            sonuc = str(int(sonuc.split(".")[0]))
         self.cikti.setText(sonuc)
 
         self.islem = [sonuc]
@@ -125,13 +135,41 @@ class CustomWindow(Ui_MainWindow):
         self.cikti.clear()
         self.islem = []
 
+    def kontrol_girdi(self, data):
+        try:
+            float(data)
+        except ValueError:
+            return str
+
+        if data.isdigit() or int(float(data)) == float(data):
+            return int
+        else:
+            return float
+
     def kaydet_methodu(self):
         self.hesapla()
         sonuc = self.cikti.text()
-        if sonuc:
+        sonuc_type = self.kontrol_girdi(sonuc)
+        if sonuc_type in [int, float]:
             self.hafiza = sonuc
+            self.hatirlama_kutucugu.setChecked(QtCore.Qt.Checked)
+            if sonuc_type == int:
+                deger = int(self.hafiza)
+                if len(self.hafiza) > 10:
+                    format_turu = "{:.2E}"
+                else:
+                    format_turu = "{:d}"
+            else:
+                deger = float(self.hafiza)
+                if len(self.hafiza) > 10:
+                    format_turu = "{:.2E}"
+                else:
+                    format_turu = "{:0.3f}"
+            self.hatirlama_kutucugu.setText(("Dolu: " + format_turu).format(deger))
         else:
             self.hafiza = None
+            self.hatirlama_kutucugu.setChecked(QtCore.Qt.Unchecked)
+            self.hatirlama_kutucugu.setText("Boş")
 
     def gerigetir_methodu(self):
         if self.hafiza is not None:
@@ -141,6 +179,8 @@ class CustomWindow(Ui_MainWindow):
 
     def unut_methodu(self):
         self.hafiza = None
+        self.hatirlama_kutucugu.setChecked(QtCore.Qt.Unchecked)
+        self.hatirlama_kutucugu.setText("Boş")
         self.temizle()
 
 
