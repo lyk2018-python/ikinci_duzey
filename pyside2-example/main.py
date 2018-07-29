@@ -1,3 +1,9 @@
+"""
+İhtiyaç olan untitled dosyası için şu komut ile untitled.ui'den untitled.py oluşturabiliriz
+
+$ pyside2-uic -o untitled.py untitled.ui
+"""
+
 from PySide2 import QtCore, QtGui, QtWidgets
 
 from untitled import Ui_MainWindow
@@ -142,6 +148,18 @@ class CustomWindow(Ui_MainWindow):
         except ZeroDivisionError:
             self.cikti.setStyleSheet(cikti_hata_css)
             self.cikti.setText("Division by zero is undefined")
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setText("You cannot divide zero by zero.")
+            msgBox.setInformativeText('The reason is related to the associated multiplication question. '
+                                      'If you divide 6 by 3 the answer is 2 because 2 times 3 IS 6. '
+                                      'If you divide 6 by zero, then you are asking the question, \n'
+                                      '"What number times zero gives 6?"')
+            msgBox.setStandardButtons(QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Help)
+            return_code = msgBox.exec_()
+            if return_code == QtWidgets.QMessageBox.Help:
+                import webbrowser
+                webbrowser.open_new_tab("https://en.wikipedia.org/wiki/Division_by_zero")
+
             return
         else:
             self.cikti.setStyleSheet(cikti_default_css)
