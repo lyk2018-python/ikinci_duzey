@@ -47,6 +47,19 @@ class CustomWindow(Ui_MainWindow):
         QtCore.QObject.connect(self.gerigetir, QtCore.SIGNAL("clicked()"), self.gerigetir_methodu)
         QtCore.QObject.connect(self.unut, QtCore.SIGNAL("clicked()"), self.unut_methodu)
 
+        self.sil.setShortcut(QtGui.QKeySequence(QtCore.Qt.Key_Delete))
+        self.geri.setShortcut(QtGui.QKeySequence(QtCore.Qt.Key_Backspace))
+
+        QtWidgets.QShortcut(QtGui.QKeySequence("="), self.esittir, self.esittir.click)
+        QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.Key_Return), self.esittir, self.esittir.click)
+        QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.Key_Enter), self.esittir, self.esittir.click)
+
+        self.kaydet.setShortcut(QtGui.QKeySequence("Ctrl+C"))
+        self.gerigetir.setShortcut(QtGui.QKeySequence("Ctrl+V"))
+        self.unut.setShortcut(QtGui.QKeySequence(QtCore.Qt.CTRL, QtCore.Qt.Key_Backspace))
+        self.karekok.setShortcut(QtGui.QKeySequence("R"))
+        self.kare.setShortcut(QtGui.QKeySequence("S"))
+
         degerler = {
             self.sifir: "0",
             self.bir: "1",
@@ -64,12 +77,19 @@ class CustomWindow(Ui_MainWindow):
             self.topla: "+",
             self.nokta: ".",
             self.mod: "%",
-            self.karekok: "**(1/2)",
-            self.kare: "**2",
             self.pac: "(",
             self.pkapa: ")",
         }
+        degerler_extra = {
+
+            self.karekok: "**(1/2)",
+            self.kare: "**2",
+        }
         for key, value in degerler.items():
+            QtCore.QObject.connect(key, QtCore.SIGNAL("clicked()"), self.ekle_methodu_fabrikasi(value))
+            key.setShortcut(QtGui.QKeySequence(value))
+
+        for key, value in degerler_extra.items():
             QtCore.QObject.connect(key, QtCore.SIGNAL("clicked()"), self.ekle_methodu_fabrikasi(value))
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
         self.unut_methodu()
