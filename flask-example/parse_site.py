@@ -287,8 +287,33 @@ def get_beyazperde_data(sayi=5, pp=False):
 
     bu_hafta_cuma = bu_hafta_pazartesi + datetime.timedelta(days=4)
     onceki_bes_cuma = [bu_hafta_cuma - datetime.timedelta(days=7 * i) for i in range(1, 1 + sayi)]
+    haftalik_filmler = parse_beyazperde([bu_hafta_cuma] + onceki_bes_cuma)
+
+    if pp:
+        print_beyazperde(haftalik_filmler)
+    else:
+        return format_beyazperde(haftalik_filmler)
+
+
+def format_beyazperde(haftalik_filmler):
+    return [
+        {
+            "hafta": veri["hafta"].isoformat(),
+            "filmler": [
+                {
+                    "isim": film.isim,
+                    "skor": film.skor
+                }
+                for film in veri["filmler"]
+            ]
+        }
+        for veri in haftalik_filmler
+    ]
+
+
+def parse_beyazperde(haftalar):
     haftalik_filmler = []
-    for sira, gun in enumerate([bu_hafta_cuma] + onceki_bes_cuma):
+    for sira, gun in enumerate(haftalar):
         base_url = "http://www.beyazperde.com/filmler/takvim/?week={}".format(gun.isoformat())
 
         try:
@@ -315,28 +340,17 @@ def get_beyazperde_data(sayi=5, pp=False):
 
         haftalik_filmler.append(({"hafta": gun, "filmler": list(sorted(filmler))}))
 
-    if pp:
-        for sira, veri in enumerate(haftalik_filmler):
-            if sira == 0:
-                print("###Bu Haftanın Filmleri")
-            else:
-                print("###Haftanın Filmleri ({})".format(veri["hafta"].isoformat()))
-            print(*[str(film) for film in veri["filmler"]], sep="\n")
-            print("-" * 39)
-    else:
-        return [
-            {
-                "hafta": veri["hafta"].isoformat(),
-                "filmler": [
-                    {
-                        "isim": film.isim,
-                        "skor": film.skor
-                    }
-                    for film in veri["filmler"]
-                ]
-            }
-            for veri in haftalik_filmler
-        ]
+    return haftalik_filmler
+
+
+def print_beyazperde(haftalik_filmler):
+    for sira, veri in enumerate(haftalik_filmler):
+        if sira == 0:
+            print("###Bu Haftanın Filmleri")
+        else:
+            print("###Haftanın Filmleri ({})".format(veri["hafta"].isoformat()))
+        print(*[str(film) for film in veri["filmler"]], sep="\n")
+        print("-" * 39)
 
 
 def compare_xpath_bs4():
