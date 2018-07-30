@@ -71,6 +71,7 @@ def get_deneme():
     """
     return "GET"
 
+
 @blueprint.route("/get_ve_post", methods=["POST"])
 def post_deneme():
     """

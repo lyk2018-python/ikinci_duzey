@@ -3,11 +3,13 @@
 
 $ pyside2-uic -o untitled.py untitled.ui
 """
-import kaynak
+from kaynak import qInitResources
+
+
 import os
 from urllib.parse import unquote
 import pygame
-from PySide2 import QtCore, QtGui, QtWidgets, QtMultimedia
+from PySide2 import QtCore, QtWidgets
 
 from nontitled import Ui_MainWindow
 
@@ -60,10 +62,11 @@ class CustomWindow(Ui_MainWindow):
             headers = "\n".join(headers)
             body = unquote("\n".join(body))
             self.progressBar.show()
-            import time, random
+            import time
+            import random
             for i in range(101):
                 self.progressBar.setValue(i)
-                time.sleep(random.randint(0,100)/5000)
+                time.sleep(random.randint(0, 100) / 5000)
             self.progressBar.hide()
             self.cikan.setPlainText("{}\n\n---===≡≡≡İÇERİK≡≡≡===---\n\n{}\n\n---===≡≡≡CD-KEY≡≡≡===---\n\n".format(headers, body))
 
@@ -72,6 +75,7 @@ if __name__ == "__main__":
     import sys
 
     app = QtWidgets.QApplication(sys.argv)
+    qInitResources()
     MainWindow = QtWidgets.QMainWindow()
     ui = CustomWindow()
     ui.setupUi(MainWindow)

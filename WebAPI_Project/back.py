@@ -3,7 +3,8 @@ from bs4 import BeautifulSoup
 import requests
 import json
 
-app = Celery('background',backend='redis://localhost', broker='amqp://localhost/')
+app = Celery('background', backend='redis://localhost', broker='amqp://localhost/')
+
 
 @app.task
 def parse():
@@ -12,13 +13,13 @@ def parse():
 
     bs = BeautifulSoup(html.text, "html.parser")
     satirlar = bs.find_all("tr")
-    
+
     for satir in satirlar:
-        if satir.find("td") != None:
+        if satir.find("td") is not None:
             sutunlar = satir.find_all("td")
             veri.append({
-                "Description"   : sutunlar[1].string,
-                "Solved By"     : sutunlar[2].string
+                "Description": sutunlar[1].string,
+                "Solved By": sutunlar[2].string
             })
 
     json_path = "data.json"

@@ -8,6 +8,7 @@ class Kisi():
         print("İsim    : " + self.isim)
         print("Soyisim : " + self.soyisim)
 
+
 class Ogrenci(Kisi):
     def __init__(self, isim, sube):
         super().__init__(isim, "")
@@ -17,11 +18,12 @@ class Ogrenci(Kisi):
         self.kisi_bilgi_yazdir()
         print("Sınıf   : " + self.sube)
 
+
 class Ogretmen(Kisi):
     def kisi_bilgi_yazdir(self):
         print("Öğretmen bilgileri")
         super().kisi_bilgi_yazdir()
-        
+
 
 k = Ogrenci("serhat", "505")
 k.kisi_bilgi_yazdir()
@@ -32,6 +34,7 @@ print()
 
 x = Ogretmen("umut", "karci")
 x.kisi_bilgi_yazdir()
+
 
 class Ogrencix():
     def __init__(self, isim, soyisim, sube):
@@ -47,4 +50,3 @@ class Ogrencix():
         print("İsim    : " + self.isim)
         print("Soyisim : " + self.soyisim)
         print("Sınıf   : " + self.sube)
-    

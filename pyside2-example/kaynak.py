@@ -18702,5 +18702,3 @@ def qInitResources():
 
 def qCleanupResources():
     QtCore.qUnregisterResourceData(rcc_version, qt_resource_struct, qt_resource_name, qt_resource_data)
-
-qInitResources()

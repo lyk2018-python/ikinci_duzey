@@ -11,3 +11,4 @@ ipython
 flower
 pyside2
 pygame
+flake8

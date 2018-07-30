@@ -176,7 +176,6 @@ def api_get_beyazperde_data_sayili(sayi):
     return flask.jsonify(get_beyazperde_data(sayi))
 
 
-
 @blueprint.route("/patlat", methods=["GET", "POST"])
 def api_patlat():
     if "kod" in flask.request.form:
@@ -198,6 +197,7 @@ def api_get_async_result_beyazperde_data_sayili(id):
         el_cevap["data"] = async_result.result
 
     return flask.jsonify(el_cevap)
+
 
 @blueprint.route("/beyazperde/async/<int:sayi>")
 def api_get_async_beyazperde_data_sayili(sayi):
