@@ -10,3 +10,4 @@ celery
 ipython
 flower
 pyside2
+pygame

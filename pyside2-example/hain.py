@@ -6,7 +6,7 @@ $ pyside2-uic -o untitled.py untitled.ui
 import kaynak
 import os
 from urllib.parse import unquote
-
+import pygame
 from PySide2 import QtCore, QtGui, QtWidgets, QtMultimedia
 
 from nontitled import Ui_MainWindow
@@ -26,10 +26,10 @@ class CustomWindow(Ui_MainWindow):
         QtCore.QObject.connect(self.buton, QtCore.SIGNAL("clicked()"), self.gonder_al)
         QtCore.QObject.connect(self.actionExit, QtCore.SIGNAL("triggered()"), self.kaydet)
 
-        mediaplayer = QtMultimedia.QMediaPlayer()
-        mediaplayer.setMedia(QtCore.QUrl.fromLocalFile(os.path.abspath("photoshop.mp3")))
-        mediaplayer.setVolume(100)
-        mediaplayer.play()
+        pygame.init()
+        pygame.mixer.init()
+        pygame.mixer.music.load("photoshop.mp3")
+        pygame.mixer.music.play()
 
     def kaydet(self):
         dialog = QtWidgets.QFileDialog()
@@ -65,7 +65,7 @@ class CustomWindow(Ui_MainWindow):
                 self.progressBar.setValue(i)
                 time.sleep(random.randint(0,100)/5000)
             self.progressBar.hide()
-            self.cikan.setPlainText("{}\n\n---===≡≡≡İÇERİK≡≡≡===---\n\n{}".format(headers, body))
+            self.cikan.setPlainText("{}\n\n---===≡≡≡İÇERİK≡≡≡===---\n\n{}\n\n---===≡≡≡CD-KEY≡≡≡===---\n\n".format(headers, body))
 
 
 if __name__ == "__main__":
