@@ -69,21 +69,45 @@ def cast_data(row_data: List[T_Row]) -> List[T_Row]:
 
 
 def get_calculated_rows(row_data: T_Rows) -> Tuple[T_Row, T_Row, T_Row]:
+    """
+    This function takes a list of migration data rows and calculates minimum, maximum and mean avg.
+    For calculated rows, last two columns are zero filled.
+    """
     total_population = []
     in_migration = []
     out_migration = []
 
-    for satir in row_data:
-        total_population.append(satir[1])
-        in_migration.append(satir[2])
-        out_migration.append(satir[3])
+    for row in row_data:
+        total_population.append(row[1])
+        in_migration.append(row[2])
+        out_migration.append(row[3])
 
-    maksimum_satir = ["Maksimum", max(total_population), max(in_migration), max(out_migration), 0, 0.0]
-    ortalama_satir = ["Ortalama", statistics.mean(total_population), statistics.mean(in_migration),
-                      statistics.mean(out_migration), 0, 0.0]
-    minimum_satir = ["Minimum", min(total_population), min(in_migration), min(out_migration), 0, 0.0]
+    max_row = [
+        "Maksimum",
+        max(total_population),
+        max(in_migration),
+        max(out_migration),
+        0,
+        0.0
+    ]
+    mean_row = [
+        "Ortalama",
+        statistics.mean(map(int, total_population)),
+        statistics.mean(map(int, in_migration)),
+        statistics.mean(map(int, out_migration)),
+        0,
+        0.0
+    ]
+    min_row = [
+        "Minimum",
+        min(total_population),
+        min(in_migration),
+        min(out_migration),
+        0,
+        0.0
+    ]
 
-    return maksimum_satir, ortalama_satir, minimum_satir
+    return max_row, mean_row, min_row
 
 
 def get_formatted_rows(row_data):
