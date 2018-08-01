@@ -14,3 +14,5 @@ pygame
 flake8
 mypy
 radon
+matplotlib
+cairocffi
