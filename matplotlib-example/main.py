@@ -1,13 +1,12 @@
 import statistics
 
 import matplotlib
-import matplotlib.pyplot as plt
 import requests
 
 matplotlib.use('Qt5Agg')
 matplotlib.rcParams['backend.qt5'] = 'PySide2'
+import matplotlib.pyplot as plt  # noqa: E402
 
-# matplotlib.use('Cairo')
 
 data = requests.get("http://127.0.0.1:5000/goc").json()[3:]
 
