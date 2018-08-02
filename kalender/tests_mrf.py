@@ -48,4 +48,29 @@ class FilterTests(unittest.TestCase):
 
 
 class ReduceTests(unittest.TestCase):
-    pass
+    def test_bos(self):
+        f = lambda x, y: x + y
+        l = []
+        t = ()
+        r = range(0)
+        s = ""
+        with self.assertRaises(ValueError):
+            reduce(f, l)
+        with self.assertRaises(ValueError):
+            reduce(f, t)
+        with self.assertRaises(ValueError):
+            reduce(f, r)
+        with self.assertRaises(ValueError):
+            reduce(f, s)
+
+    def test_uclu(self):
+
+        f = lambda x, y: x + y
+        l = [1,2,3]
+        t = (1,2,3)
+        r = range(3)
+        s = "abc"
+        self.assertEqual(reduce(f, l), 6)
+        self.assertEqual(reduce(f, t), 6)
+        self.assertEqual(reduce(f, r), 3)
+        self.assertEqual(reduce(f, s), "abc")
