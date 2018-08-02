@@ -22,6 +22,8 @@ def filter(func, liste):
 
 def reduce(func, liste):
     """Bir sekansı bir fonksyona sırayla sokup sonuçları birleştirerek döndürür"""
+    if len(liste) < 2:
+        raise ValueError("Reduce işlemi için en az 2 elemanlı bir girdi gerekir")
     sonuc = func(liste[0], liste[1])
     for item in liste[2:]:
         sonuc = func(sonuc, item)
